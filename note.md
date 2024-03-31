@@ -1,0 +1,11 @@
+- divide web page for 2 repositories(left/right)
+- select repository
+    - get list of branch
+- select branch
+    - pull branch on select 
+- select branch
+    - pull branch on select
+- list commits(datetime, id, comment)
+- select commit(s) on left-side repo/branch
+- cherry-pick selected commit(s) to right-side repo/branch
+- push

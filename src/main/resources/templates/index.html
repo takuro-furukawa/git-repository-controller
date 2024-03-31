@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>git repository controller</title>
+</head>
+<body>
+  <div>
+      <form th:action="@{/}" method="get" th:object="${GitInfo}">
+          <input type="text" th:field="*{repoUrl}" />
+          <button type="submit" name="repo">select branch</button>
+          <select th:field="*{branchName}">
+              <option th:each="branchInfo : *{branchInfoList}" th:value="${branchInfo.name}" th:text="${branchInfo.name}"></option>
+          </select>
+          <button type="submit" name="branch">get log</button>
+          <ul>
+              <li th:each="item : *{commitInfoList}">[[${item.commidId}}]] [[${item.commitMessage}]]
+              </li>
+          </ul>
+          <div th:each="branchInfo, item : *{branchInfoList}">
+              <input type="hidden" th:field="*{branchInfoList[__${item.index}__].name}" />
+          </div>
+          <div th:each="commitInfo, item : *{commitInfoList}">
+              <input type="hidden" th:field="*{commitInfoList[__${item.index}__].commitId}" />
+              <input type="hidden" th:field="*{commitInfoList[__${item.index}__].commitMessage}" />
+          </div>
+      </form>
+  </div>
+
+</body>
+</html>
