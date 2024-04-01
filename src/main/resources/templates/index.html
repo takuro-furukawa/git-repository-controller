@@ -14,7 +14,7 @@
           </select>
           <button type="submit" name="branch">get log</button>
           <ul>
-              <li th:each="item : *{commitInfoList}">[[${item.commidId}}]] [[${item.commitMessage}]]
+              <li th:each="item : *{commitInfoList}">[[${item.commitId}]] [[${item.commitMessage}]]
               </li>
           </ul>
           <div th:each="branchInfo, item : *{branchInfoList}">
