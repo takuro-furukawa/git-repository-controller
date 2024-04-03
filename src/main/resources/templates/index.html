@@ -6,23 +6,44 @@
 </head>
 <body>
   <div>
-      <form th:action="@{/}" method="get" th:object="${GitInfo}">
-          <input type="text" th:field="*{repoUrl}" />
-          <button type="submit" name="repo">select branch</button>
-          <select th:field="*{branchName}">
-              <option th:each="branchInfo : *{branchInfoList}" th:value="${branchInfo.name}" th:text="${branchInfo.name}"></option>
-          </select>
-          <button type="submit" name="branch">get log</button>
-          <ul>
-              <li th:each="item : *{commitInfoList}">[[${item.commitId}]] [[${item.commitMessage}]]
-              </li>
-          </ul>
-          <div th:each="branchInfo, item : *{branchInfoList}">
-              <input type="hidden" th:field="*{branchInfoList[__${item.index}__].name}" />
+      <form th:action="@{/}" method="get" th:object="${PageInfo}">
+          <div>
+              <input type="text" th:field="*{gitInfoFrom.repoUrl}" />
+              <button type="submit" name="repo1">select branch</button>
+              <select th:field="*{gitInfoFrom.branchName}">
+                  <option th:each="branchInfo : *{gitInfoFrom.branchInfoList}" th:value="${branchInfo.name}" th:text="${branchInfo.name}"></option>
+              </select>
+              <button type="submit" name="branch1">get log</button>
+              <ul>
+                  <li th:each="item : *{gitInfoFrom.commitInfoList}">[[${item.commitId}]] [[${item.commitMessage}]]
+                  </li>
+              </ul>
+              <div th:each="branchInfo, item : *{gitInfoFrom.branchInfoList}">
+                  <input type="hidden" th:field="*{gitInfoFrom.branchInfoList[__${item.index}__].name}" />
+              </div>
+              <div th:each="commitInfo, item : *{gitInfoFrom.commitInfoList}">
+                  <input type="hidden" th:field="*{gitInfoFrom.commitInfoList[__${item.index}__].commitId}" />
+                  <input type="hidden" th:field="*{gitInfoFrom.commitInfoList[__${item.index}__].commitMessage}" />
+              </div>
           </div>
-          <div th:each="commitInfo, item : *{commitInfoList}">
-              <input type="hidden" th:field="*{commitInfoList[__${item.index}__].commitId}" />
-              <input type="hidden" th:field="*{commitInfoList[__${item.index}__].commitMessage}" />
+          <div>
+              <input type="text" th:field="*{gitInfoTo.repoUrl}" />
+              <button type="submit" name="repo2">select branch</button>
+              <select th:field="*{gitInfoTo.branchName}">
+                  <option th:each="branchInfo : *{gitInfoTo.branchInfoList}" th:value="${branchInfo.name}" th:text="${branchInfo.name}"></option>
+              </select>
+              <button type="submit" name="branch2">get log</button>
+              <ul>
+                  <li th:each="item : *{gitInfoTo.commitInfoList}">[[${item.commitId}]] [[${item.commitMessage}]]
+                  </li>
+              </ul>
+              <div th:each="branchInfo, item : *{gitInfoTo.branchInfoList}">
+                  <input type="hidden" th:field="*{gitInfoTo.branchInfoList[__${item.index}__].name}" />
+              </div>
+              <div th:each="commitInfo, item : *{gitInfoTo.commitInfoList}">
+                  <input type="hidden" th:field="*{gitInfoTo.commitInfoList[__${item.index}__].commitId}" />
+                  <input type="hidden" th:field="*{gitInfoTo.commitInfoList[__${item.index}__].commitMessage}" />
+              </div>
           </div>
       </form>
   </div>
