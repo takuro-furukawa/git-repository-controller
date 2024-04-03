@@ -17,4 +17,5 @@ public class GitInfo {
     String branchName;
     List<BranchInfo> branchInfoList;
     List<CommitInfo> commitInfoList;
+    String[] checkedCommitId;
 }

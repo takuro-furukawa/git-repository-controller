@@ -14,10 +14,9 @@
                   <option th:each="branchInfo : *{gitInfoFrom.branchInfoList}" th:value="${branchInfo.name}" th:text="${branchInfo.name}"></option>
               </select>
               <button type="submit" name="branch1">get log</button>
-              <ul>
-                  <li th:each="item : *{gitInfoFrom.commitInfoList}">[[${item.commitId}]] [[${item.commitMessage}]]
-                  </li>
-              </ul>
+              <div th:each="item : *{gitInfoFrom.commitInfoList}">
+                  <input type="checkbox" th:value="${item.commitId}" th:text="${item.commitId + ' ' + item.commitMessage}" th:field="*{gitInfoFrom.checkedCommitId}" />
+              </div>
               <div th:each="branchInfo, item : *{gitInfoFrom.branchInfoList}">
                   <input type="hidden" th:field="*{gitInfoFrom.branchInfoList[__${item.index}__].name}" />
               </div>
@@ -33,10 +32,9 @@
                   <option th:each="branchInfo : *{gitInfoTo.branchInfoList}" th:value="${branchInfo.name}" th:text="${branchInfo.name}"></option>
               </select>
               <button type="submit" name="branch2">get log</button>
-              <ul>
-                  <li th:each="item : *{gitInfoTo.commitInfoList}">[[${item.commitId}]] [[${item.commitMessage}]]
-                  </li>
-              </ul>
+              <div th:each="item : *{gitInfoTo.commitInfoList}">
+                  <span th:text="${item.commitId + ' ' + item.commitMessage}"></span>
+              </div>
               <div th:each="branchInfo, item : *{gitInfoTo.branchInfoList}">
                   <input type="hidden" th:field="*{gitInfoTo.branchInfoList[__${item.index}__].name}" />
               </div>
@@ -44,6 +42,9 @@
                   <input type="hidden" th:field="*{gitInfoTo.commitInfoList[__${item.index}__].commitId}" />
                   <input type="hidden" th:field="*{gitInfoTo.commitInfoList[__${item.index}__].commitMessage}" />
               </div>
+          </div>
+          <div>
+              <button type="submit" name="cp">cherry-pick</button>
           </div>
       </form>
   </div>

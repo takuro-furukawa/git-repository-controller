@@ -5,8 +5,15 @@ import org.apache.commons.logging.LogFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.IncorrectObjectTypeException;
+import org.eclipse.jgit.errors.MissingObjectException;
+import org.eclipse.jgit.errors.StopWalkException;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.URIish;
 import org.example.gitrepocontroller.bean.BranchInfo;
 import org.example.gitrepocontroller.bean.CommitInfo;
 import org.example.gitrepocontroller.bean.GitInfo;
@@ -19,10 +26,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
 @SpringBootApplication
 public class GitRepoControllerApplication {
@@ -72,12 +81,7 @@ class GitRepoController {
         log.debug("get repo");
         GitInfo gitInfo = pageInfo.getGitInfoFrom();
         Git git = getGit(gitInfo.getRepoUrl());
-        git.pull().setRemote("origin").call();
-        List<BranchInfo> branchInfoList = new ArrayList<>();
-        git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call().forEach(ref -> {
-            branchInfoList.add(new BranchInfo(ref.getName()));
-        });
-        gitInfo.setBranchInfoList(branchInfoList);
+        gitInfo.setBranchInfoList(getBranch(git));
 
         model.addAttribute("PageInfo", pageInfo);
         return "index";
@@ -97,12 +101,7 @@ class GitRepoController {
         GitInfo gitInfo = pageInfo.getGitInfoFrom();
         log.debug("get branch");
         Git git = getGit(gitInfo.getRepoUrl());
-        git.checkout().setName(gitInfo.getBranchName());
-        List<CommitInfo> commitInfoList = new ArrayList<>();
-        git.log().setMaxCount(10).call().forEach(revCommit -> {
-            commitInfoList.add(new CommitInfo(revCommit.getId().getName(), revCommit.getFullMessage()));
-        });
-        gitInfo.setCommitInfoList(commitInfoList);
+        gitInfo.setCommitInfoList(getLog(git, gitInfo.getBranchName()));
 
         model.addAttribute("PageInfo", pageInfo);
         return "index";
@@ -122,12 +121,7 @@ class GitRepoController {
         log.debug("get repo");
         GitInfo gitInfo = pageInfo.getGitInfoTo();
         Git git = getGit(gitInfo.getRepoUrl());
-        git.pull().setRemote("origin").call();
-        List<BranchInfo> branchInfoList = new ArrayList<>();
-        git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call().forEach(ref -> {
-            branchInfoList.add(new BranchInfo(ref.getName()));
-        });
-        gitInfo.setBranchInfoList(branchInfoList);
+        gitInfo.setBranchInfoList(getBranch(git));
 
         model.addAttribute("PageInfo", pageInfo);
         return "index";
@@ -148,11 +142,30 @@ class GitRepoController {
         log.debug("get branch");
         Git git = getGit(gitInfo.getRepoUrl());
         git.checkout().setName(gitInfo.getBranchName());
-        List<CommitInfo> commitInfoList = new ArrayList<>();
-        git.log().setMaxCount(10).call().forEach(revCommit -> {
-            commitInfoList.add(new CommitInfo(revCommit.getId().getName(), revCommit.getFullMessage()));
-        });
-        gitInfo.setCommitInfoList(commitInfoList);
+        gitInfo.setCommitInfoList(getLog(git, gitInfo.getBranchName()));
+
+        model.addAttribute("PageInfo", pageInfo);
+        return "index";
+    }
+
+    @GetMapping(value = "/", params = "cp")
+    public String cherryPick(Model model, PageInfo pageInfo) throws GitAPIException, IOException, URISyntaxException {
+        GitInfo gitInfoFrom = pageInfo.getGitInfoFrom();
+        Git gitFrom = getGit(gitInfoFrom.getRepoUrl());
+        gitFrom.checkout().setName(gitInfoFrom.getBranchName()).call();
+        gitFrom.fetch().setRemote("origin").call();
+        RevFilter filter = RevFilter.NO_MERGES;
+        List<RevCommit> pickedCommitList = new ArrayList<>();
+        for (String commitId : gitInfoFrom.getCheckedCommitId()) {
+            RevCommit revCommit = (RevCommit) StreamSupport.stream(gitFrom.log().setRevFilter(filter).call().spliterator(), false)
+                    .filter(rc -> rc.getId().getName().equals(commitId));
+            pickedCommitList.add(revCommit);
+        }
+
+        GitInfo gitInfoTo = pageInfo.getGitInfoTo();
+        Git gitTo = getGit(gitInfoTo.getRepoUrl());
+        gitTo.remoteAdd().setName("fork").setUri(new URIish(gitInfoFrom.getRepoUrl()));
+        gitTo.fetch().setRemote("fork").call();
 
         model.addAttribute("PageInfo", pageInfo);
         return "index";
@@ -171,5 +184,24 @@ class GitRepoController {
             git = new Git(repo);
         }
         return git;
+    }
+
+    private List<CommitInfo> getLog(Git git, String branchName) throws GitAPIException {
+        git.checkout().setName(branchName).call();
+        git.fetch().setRemote("origin").call();
+        List<CommitInfo> commitInfoList = new ArrayList<>();
+        git.log().setMaxCount(10).call().forEach(revCommit -> {
+            commitInfoList.add(new CommitInfo(revCommit.getId().getName(), revCommit.getFullMessage()));
+        });
+        return commitInfoList;
+    }
+
+    private List<BranchInfo> getBranch(Git git) throws GitAPIException {
+        git.fetch().setRemote("origin").call();
+        List<BranchInfo> branchInfoList = new ArrayList<>();
+        git.branchList().setListMode(ListBranchCommand.ListMode.ALL).call().forEach(ref -> {
+            branchInfoList.add(new BranchInfo(ref.getName()));
+        });
+        return branchInfoList;
     }
 }
